@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1f2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="세탁">
+<title>세탁 계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1318;
+    --surface: #1a2030;
+    --surface2: #222b3d;
+    --border: #2d3a52;
+    --accent: #4fc3f7;
+    --accent2: #81d4fa;
+    --text: #e8edf5;
+    --text2: #8a9bb8;
+    --success: #69f0ae;
+    --warn: #ffcc02;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Gowun Dodum', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    padding: 28px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 18px;
+    transition: all .2s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text2);
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin-bottom: 12px;
+  }
+
+  /* 옷 목록 */
+  .clothes-list {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .cloth-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color .2s, background .2s;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .cloth-item.checked {
+    border-color: var(--accent);
+    background: #1a2a3a;
+  }
+
+  .check-circle {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all .2s;
+    font-size: 13px;
+  }
+  .cloth-item.checked .check-circle {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .cloth-info {
+    flex: 1;
+  }
+  .cloth-name { font-size: 15px; margin-bottom: 2px; }
+  .cloth-weight { font-size: 12px; color: var(--text2); }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .qty-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .qty-btn:active { transform: scale(.9); background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .qty-num {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 16px;
+    min-width: 20px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  /* 결과 카드 */
+  .result-card {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, #1a2a3a 0%, #1a2030 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .result-row:last-child { margin-bottom: 0; }
+
+  .result-label { color: var(--text2); font-size: 13px; }
+
+  .result-value {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  .result-value.detergent {
+    font-size: 28px;
+    color: var(--success);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* 세제 바 시각화 */
+  .detergent-bar-wrap {
+    margin-top: 16px;
+  }
+  .bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .bar-track {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* 빈 상태 */
+  .empty-hint {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  /* 설정 패널 */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 10;
+    backdrop-filter: blur(4px);
+  }
+  .overlay.open { display: flex; align-items: flex-end; }
+
+  .settings-panel {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px 20px 40px;
+    border-top: 1px solid var(--border);
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .panel-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .setting-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .setting-item input[type="text"] {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 15px;
+    outline: none;
+  }
+
+  .setting-item input[type="number"] {
+    width: 70px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 14px;
+    padding: 6px 8px;
+    text-align: center;
+    outline: none;
+  }
+
+  .setting-suffix { font-size: 12px; color: var(--text2); }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+
+  .add-btn {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 4px;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .reset-btn {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px solid #ff6b6b44;
+    border-radius: var(--radius);
+    color: #ff6b6b;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all .2s;
+  }
+  .reset-btn:hover { background: #ff6b6b22; }
+
+  /* 숨기기 토글 */
+  .hide-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    opacity: .5;
+    transition: opacity .2s;
+  }
+  .hide-btn:hover { opacity: 1; }
+  .hide-btn.hidden { opacity: 1; color: var(--warn); }
+
+  .setting-item.is-hidden {
+    opacity: .45;
+  }
+  .setting-item.is-hidden input { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🫧 세탁 계산기</h1>
+  <div class="icon-btn" onclick="openSettings()">⚙</div>
+</header>
+
+<div class="section-label">세탁물 선택</div>
+<div class="clothes-list" id="clothesList"></div>
+
+<div class="section-label">계산 결과</div>
+<div class="result-card" id="resultCard">
+  <div class="empty-hint">옷을 선택하면 세제량이 계산돼요</div>
+</div>
+
+<!-- 설정 패널 -->
+<div class="overlay" id="overlay" onclick="closeSettings(event)">
+  <div class="settings-panel">
+    <div class="panel-header">
+      <span class="panel-title">⚙ 옷 항목 편집</span>
+      <div class="icon-btn" onclick="closeSettings()">✕</div>
+    </div>
+    <div id="settingsList"></div>
+    <button class="add-btn" onclick="addClothItem()">＋ 항목 추가</button>
+    <button class="reset-btn" onclick="resetAll()">초기화</button>
+  </div>
+</div>
+
+<script>
+// 드럼 세탁기 세제 테이블 (kg → mL)
+const DETERGENT_TABLE = [
+  { kg: 10, ml: 43 },
+  { kg: 8,  ml: 37 },
+  { kg: 6,  ml: 32 },
+  { kg: 5,  ml: 29 },
+  { kg: 4,  ml: 25 },
+  { kg: 3,  ml: 20 },
+  { kg: 2,  ml: 14 },
+  { kg: 1,  ml: 8  },
+];
+
+const DEFAULT_CLOTHES = [
+  { id: 1, name: '티셔츠',     grams: 200 },
+  { id: 2, name: '청바지',     grams: 600 },
+  { id: 3, name: '속옷',       grams: 50  },
+  { id: 4, name: '양말 (짝)',  grams: 40  },
+  { id: 5, name: '후드',       grams: 600 },
+  { id: 6, name: '맨투맨',     grams: 450 },
+];
+
+let clothes = [];
+let checked = {}; // id → qty
+
+function load() {
+  const saved = localStorage.getItem('laundry-clothes');
+  clothes = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_CLOTHES));
+  const savedChecked = localStorage.getItem('laundry-checked');
+  checked = savedChecked ? JSON.parse(savedChecked) : {};
+}
+
+function save() {
+  localStorage.setItem('laundry-clothes', JSON.stringify(clothes));
+  localStorage.setItem('laundry-checked', JSON.stringify(checked));
+}
+
+function calcDetergent(totalGrams) {
+  const kg = totalGrams / 1000;
+  // 선형 보간
+  for (let i = 0; i < DETERGENT_TABLE.length - 1; i++) {
+    const hi = DETERGENT_TABLE[i];
+    const lo = DETERGENT_TABLE[i + 1];
+    if (kg <= hi.kg && kg >= lo.kg) {
+      const t = (kg - lo.kg) / (hi.kg - lo.kg);
+      return Math.round(lo.ml + t * (hi.ml - lo.ml));
+    }
+  }
+  if (kg > 10) return 43;
+  if (kg < 1) return Math.round(kg * 8);
+  return 20;
+}
+
+function sortedVisible() {
+  return clothes
+    .filter(c => !c.hidden)
+    .sort((a, b) => b.grams - a.grams);
+}
+
+function renderClothes() {
+  const list = document.getElementById('clothesList');
+  list.innerHTML = '';
+  sortedVisible().forEach(c => {
+    const qty = checked[c.id] || 0;
+    const isChecked = qty > 0;
+    const div = document.createElement('div');
+    div.className = 'cloth-item' + (isChecked ? ' checked' : '');
+    div.innerHTML = `
+      <div class="check-circle">${isChecked ? '✓' : ''}</div>
+      <div class="cloth-info">
+        <div class="cloth-name">${c.name}</div>
+        <div class="cloth-weight">${c.grams}g / 개</div>
+      </div>
+      <div class="qty-control" onclick="event.stopPropagation()">
+        <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="changeQty(${c.id}, 1)">＋</button>
+      </div>
+    `;
+    div.onclick = () => toggleCheck(c.id);
+    list.appendChild(div);
+  });
+  renderResult();
+}
+
+function toggleCheck(id) {
+  if (!checked[id] || checked[id] === 0) {
+    checked[id] = 1;
+  } else {
+    checked[id] = 0;
+  }
+  save();
+  renderClothes();
+}
+
+function changeQty(id, delta) {
+  checked[id] = Math.max(0, (checked[id] || 0) + delta);
+  save();
+  renderClothes();
+}
+
+function renderResult() {
+  const card = document.getElementById('resultCard');
+  let totalGrams = 0;
+  clothes.forEach(c => {
+    totalGrams += (checked[c.id] || 0) * c.grams;
+  });
+
+  if (totalGrams === 0) {
+    card.innerHTML = `<div class="empty-hint">옷을 선택하면 세제량이 계산돼요</div>`;
+    return;
+  }
+
+  const ml = calcDetergent(totalGrams);
+  const kg = (totalGrams / 1000).toFixed(2);
+  const maxMl = 43;
+  const pct = Math.min(100, Math.round(ml / maxMl * 100));
+
+  // 항목 요약
+  const items = clothes
+    .filter(c => (checked[c.id] || 0) > 0)
+    .map(c => `${c.name} ×${checked[c.id]}`)
+    .join('  ·  ');
+
+  card.innerHTML = `
+    <div class="result-row">
+      <span class="result-label">세탁물 무게</span>
+      <span class="result-value">${kg} kg</span>
+    </div>
+    <div class="divider"></div>
+    <div class="result-row">
+      <span class="result-label">💧 세제량 (드럼)</span>
+      <span class="result-value detergent">${ml} mL</span>
+    </div>
+    <div class="detergent-bar-wrap">
+      <div class="bar-labels">
+        <span>0 mL</span>
+        <span>최대 43 mL (10kg)</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:12px; color:var(--text2); line-height:1.8">${items}</div>
+  `;
+}
+
+function renderSettings() {
+  const list = document.getElementById('settingsList');
+  list.innerHTML = '';
+  const sorted = [...clothes].sort((a, b) => b.grams - a.grams);
+  sorted.forEach((c) => {
+    const div = document.createElement('div');
+    div.className = 'setting-item' + (c.hidden ? ' is-hidden' : '');
+    div.innerHTML = `
+      <input type="text" value="${c.name}" onchange="updateName(${c.id}, this.value)" placeholder="이름">
+      <input type="number" value="${c.grams}" onchange="updateGrams(${c.id}, this.value)" min="1">
+      <span class="setting-suffix">g</span>
+      <button class="hide-btn ${c.hidden ? 'hidden' : ''}" onclick="toggleHide(${c.id})" title="${c.hidden ? '표시' : '숨기기'}">${c.hidden ? '⬜' : '✅'}</button>
+      <button class="del-btn" onclick="deleteCloth(${c.id})">×</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleHide(id) {
+  const c = clothes.find(x => x.id === id);
+  if (c) {
+    c.hidden = !c.hidden;
+    if (c.hidden) checked[id] = 0; // 숨기면 체크 해제
+  }
+  save();
+  renderSettings();
+  renderClothes();
+}
+
+function updateName(id, val) {
+  const c = clothes.find(x => x.id === id);
+  if (c) c.name = val;
+  save();
+}
+
+function updateGrams(id, val) {
+  const c = clothes.find(x => x.id === id);
+  if (c) c.grams = parseInt(val) || c.grams;
+  save();
+  renderClothes();
+}
+
+function deleteCloth(id) {
+  clothes = clothes.filter(c => c.id !== id);
+  delete checked[id];
+  save();
+  renderSettings();
+  renderClothes();
+}
+
+function addClothItem() {
+  const newId = Date.now();
+  clothes.push({ id: newId, name: '새 항목', grams: 200 });
+  save();
+  renderSettings();
+  renderClothes();
+}
+
+function resetAll() {
+  if (!confirm('모든 항목을 초기화할까요?')) return;
+  clothes = JSON.parse(JSON.stringify(DEFAULT_CLOTHES));
+  checked = {};
+  save();
+  renderSettings();
+  renderClothes();
+}
+
+function openSettings() {
+  renderSettings();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSettings(e) {
+  if (!e || e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+    renderClothes();
+  }
+}
+
+load();
+renderClothes();
+</script>
+
+<!-- PWA manifest inline -->
+<script>
+const manifestData = {
+  name: "세탁 계산기",
+  short_name: "세탁",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0f1318",
+  theme_color: "#1a1f2e",
+  icons: [{
+    src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231a2030'/><text y='.9em' font-size='75' x='10'>🫧</text></svg>",
+    sizes: "192x192",
+    type: "image/svg+xml"
+  }]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+const link = document.createElement('link');
+link.rel = 'manifest';
+link.href = manifestURL;
+document.head.appendChild(link);
+</script>
+
+<!-- Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'laundry-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    });
+  `;
+  const swBlob = new Blob([swCode], {type: 'application/javascript'});
+  const swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(() => {});
+}
+</script>
+</body>
+</html>
